@@ -1,0 +1,5 @@
+{
+  "name": "MangaHook Reader",
+  "description": "A modern and sleek web application for browsing and reading your favorite manga and webtoons, powered by the MangaHook API. Discover new series, read chapters seamlessly, and enjoy a responsive reading experience.",
+  "requestFramePermissions": []
+}
