@@ -47,8 +47,8 @@ Once the deployment is finished, Vercel will congratulate you and provide you wi
 
 ### How to Verify It's Working
 
-1.  **Direct API Test**: After your Vercel deployment is finished, take your new URL and add a test endpoint to it, like `/manga/mangahere/one piece`. The full URL would look like this:
-    `https://your-project-name.vercel.app/manga/mangahere/one piece`
+1.  **Direct API Test**: After your Vercel deployment is finished, take your new URL and add a test endpoint to it, like `/manga/mangadex/one piece`. The full URL would look like this:
+    `https://your-project-name.vercel.app/manga/mangadex/one piece`
 
     Paste this URL into your browser's address bar. If you see a page full of JSON data showing search results for "One Piece", your API is deployed and working correctly!
 
