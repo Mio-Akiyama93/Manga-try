@@ -1,5 +1,5 @@
 
-import React, from 'react';
+import React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getMangaList, searchManga } from '../services/mangaApi';
 import type { Manga } from '../types';
