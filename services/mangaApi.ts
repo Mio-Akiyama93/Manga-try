@@ -5,20 +5,20 @@ import type { ConsumetMangaResult, ConsumetMangaInfo, ConsumetChapterPage } from
 // --- Helper Functions ---
 
 const createImageUrl = (url: string, headers: object | undefined): string => {
-    if (!url) return 'https://picsum.photos/400/600?grayscale';
-    if (API_BASE_URL.includes('replace-with-your-vercel-deployment-url')) {
-        console.warn("API_BASE_URL has not been set in constants.ts. Images may not load correctly.");
-        return url;
+    if (!url) {
+        // Return a placeholder if the URL is missing
+        return 'https://picsum.photos/400/600?grayscale';
     }
-    
-    // For MangaDex, a direct link is often fine, but the proxy is a good fallback.
-    // The consumet API has a built-in image proxy that handles required headers if any.
-    const proxyUrl = new URL(`${API_BASE_URL}/utils/image-proxy`);
-    proxyUrl.searchParams.append('url', url);
-    if (headers) {
-        proxyUrl.searchParams.append('headers', JSON.stringify(headers));
+    // If headers are provided, it's likely for chapter pages that need a referer.
+    // Use the consumet proxy to load them correctly. This fixes issues with
+    // hotlink protection from sources like MangaDex.
+    if (headers && Object.keys(headers).length > 0) {
+        const encodedUrl = encodeURIComponent(url);
+        const encodedHeaders = encodeURIComponent(JSON.stringify(headers));
+        return `${API_BASE_URL}/utils/image-proxy?url=${encodedUrl}&headers=${encodedHeaders}`;
     }
-    return proxyUrl.toString();
+    // For covers without special headers, the direct URL is faster and reliable.
+    return url;
 };
 
 const handleResponse = async <T,>(response: Response): Promise<T> => {
@@ -48,7 +48,7 @@ const mapConsumetToManga = (manga: ConsumetMangaResult): Manga => ({
 
 // A curated list of popular manga to display on the home page using MangaDex IDs.
 const FEATURED_MANGA_IDS = [
-    'a1c7c817-4e59-43b7-9365-028bf155a35b', // One Piece
+    'a1c7c817-4e59-43b7-9365-09675a149a6f', // One Piece
     '6574374a-12e0-46f7-b803-247c223c6b2a', // Berserk
     '515a6b7d-5e58-4545-927a-e49043236b56', // Vagabond
     '37f5cce0-8070-4ada-96e5-fa24b22334a9', // Kingdom
@@ -56,7 +56,6 @@ const FEATURED_MANGA_IDS = [
     'a41a4c21-b512-46a2-9e19-58b6ac1b6c00', // Jujutsu Kaisen
     'c189b70b-118c-42ac-b08e-5b1b4458f338', // Solo Leveling
     'a77742b6-fe36-4020-a241-3d7da65a1112', // Chainsaw Man
-
     'a793ddc2-035b-436b-82a1-c01280b188c0', // Attack on Titan
     'c0f295b9-7b18-4981-8669-02dbb1c60f1b', // One-Punch Man
     '188a1c22-0545-4f4d-a957-b2484a0d81f1', // Monster
@@ -70,7 +69,7 @@ export const getHomePageManga = async (): Promise<Manga[]> => {
         fetch(`${API_BASE_URL}/manga/mangadex/info/${id}`).then(res => res.json())
     );
     const results: ConsumetMangaInfo[] = await Promise.all(promises);
-    return results.map(manga => ({
+    return results.filter(manga => manga && manga.id).map(manga => ({
         id: manga.id,
         title: getLocalizedString(manga.title),
         coverUrl: createImageUrl(manga.image, manga.headerForImage),
