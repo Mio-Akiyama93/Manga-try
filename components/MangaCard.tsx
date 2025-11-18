@@ -4,22 +4,22 @@ import type { Manga } from '../types';
 
 interface MangaCardProps {
   manga: Manga;
-  onSelectManga: (endpoint: string) => void;
+  onSelectManga: (id: string) => void;
 }
 
 const MangaCard: React.FC<MangaCardProps> = ({ manga, onSelectManga }) => {
-  // The API sometimes provides image URLs with problematic referrers.
-  // Using an image proxy can help, but for now we'll use a direct link with a placeholder.
-  const imageUrl = `https://images.weserv.nl/?url=${manga.thumb.replace('http://', 'https://')}`;
-  
   return (
     <div
       className="bg-secondary rounded-lg overflow-hidden shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-highlight/20 group"
-      onClick={() => onSelectManga(manga.endpoint)}
+      onClick={() => onSelectManga(manga.id)}
+      role="button"
+      tabIndex={0}
+      aria-label={`Select ${manga.title}`}
+      onKeyDown={(e) => e.key === 'Enter' && onSelectManga(manga.id)}
     >
       <div className="relative aspect-[2/3] w-full">
         <img
-          src={imageUrl}
+          src={manga.coverUrl}
           alt={manga.title}
           loading="lazy"
           className="w-full h-full object-cover"

@@ -1,72 +1,54 @@
-
 import React from 'react';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { getMangaList, searchManga } from '../services/mangaApi';
+import { useState, useEffect } from 'react';
+import { getHomePageManga, searchManga } from '../services/mangaApi';
 import type { Manga } from '../types';
 import MangaCard from './MangaCard';
 import Spinner from './Spinner';
 import SearchIcon from './icons/SearchIcon';
 
 interface HomePageProps {
-  onSelectManga: (endpoint: string) => void;
+  onSelectManga: (id: string) => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ onSelectManga }) => {
   const [mangaList, setMangaList] = useState<Manga[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   
-  const observer = useRef<IntersectionObserver>();
-
-  const loadManga = useCallback(async (pageNum: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const newList = await getMangaList(pageNum);
-      if (newList.length === 0) {
-        setHasMore(false);
-      } else {
-        setMangaList(prev => [...prev, ...newList]);
-      }
-    } catch (err) {
-      setError('Failed to fetch manga. The API might be down or you might have a network issue.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (searchQuery) return;
-    loadManga(page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchQuery]);
-
-  const lastMangaElementRef = useCallback((node: HTMLDivElement) => {
-    if (isLoading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && !searchQuery) {
-        setPage(prevPage => prevPage + 1);
+    const loadFeaturedManga = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const featuredList = await getHomePageManga();
+        setMangaList(featuredList);
+      } catch (err) {
+        setError('Failed to fetch featured manga. The API might be down.');
+      } finally {
+        setIsLoading(false);
       }
-    });
-    if (node) observer.current.observe(node);
-  }, [isLoading, hasMore, searchQuery]);
+    };
+    
+    // Only load featured manga if not in a search state
+    if (!isSearching) {
+      loadFeaturedManga();
+    }
+  }, [isSearching]);
 
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
+    if (!query) return;
 
     setIsSearching(true);
     setIsLoading(true);
     setError(null);
+    setMangaList([]);
     try {
-        const results = await searchManga(searchQuery);
+        const results = await searchManga(query);
         setMangaList(results);
-        setHasMore(false);
     } catch (err) {
         setError('Failed to perform search.');
     } finally {
@@ -76,11 +58,7 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectManga }) => {
 
   const clearSearch = () => {
     setSearchQuery('');
-    setMangaList([]);
-    setPage(1);
-    setHasMore(true);
-    setIsSearching(false);
-    loadManga(1);
+    setIsSearching(false); // This will trigger the useEffect to load featured manga
   };
 
   return (
@@ -99,27 +77,31 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectManga }) => {
             placeholder="Search for your favorite manga..."
             className="w-full bg-secondary border-2 border-accent focus:border-highlight focus:ring-0 rounded-full py-3 pl-5 pr-12 text-text-main placeholder-text-secondary transition-colors"
           />
-          <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-highlight/80 hover:bg-highlight text-white transition-colors">
+          <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-highlight/80 hover:bg-highlight text-white transition-colors" aria-label="Search">
             <SearchIcon className="h-5 w-5"/>
           </button>
         </form>
-        {isSearching && <button onClick={clearSearch} className="mt-4 w-full text-center text-highlight hover:underline">Clear Search Results</button>}
+        {isSearching && <button onClick={clearSearch} className="mt-4 w-full text-center text-highlight hover:underline">Clear Search & View Featured</button>}
       </div>
 
       {error && <p className="text-center text-red-400 bg-red-900/50 p-4 rounded-lg">{error}</p>}
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-        {mangaList.map((manga, index) => {
-          if (mangaList.length === index + 1) {
-            return <div ref={lastMangaElementRef} key={manga.endpoint}><MangaCard manga={manga} onSelectManga={onSelectManga} /></div>
-          }
-          return <MangaCard key={manga.endpoint} manga={manga} onSelectManga={onSelectManga} />
-        })}
-      </div>
+      {!isSearching && !isLoading && <h2 className="text-2xl font-bold text-center mb-6">Featured Manga</h2>}
 
-      {isLoading && <div className="py-10"><Spinner /></div>}
-      {!isLoading && !hasMore && !searchQuery && mangaList.length > 0 && <p className="text-center text-text-secondary mt-8">You've reached the end!</p>}
-      {!isLoading && isSearching && mangaList.length === 0 && <p className="text-center text-text-secondary mt-8">No results found for "{searchQuery}".</p>}
+      {isLoading ? (
+        <div className="py-10"><Spinner /></div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+            {mangaList.map((manga) => (
+              <MangaCard key={manga.id} manga={manga} onSelectManga={onSelectManga} />
+            ))}
+          </div>
+          {!isLoading && isSearching && mangaList.length === 0 && (
+            <p className="text-center text-text-secondary mt-8">No results found for "{searchQuery}".</p>
+          )}
+        </>
+      )}
     </div>
   );
 };

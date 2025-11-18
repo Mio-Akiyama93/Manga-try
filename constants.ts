@@ -1,6 +1,10 @@
-
 /**
- * IMPORTANT: Replace this URL with the URL of your deployed MangaHook API.
- * This is the API from https://github.com/kiraaziz/mangahook-api that you need to host on a service like Vercel.
+ * The base URL for the consumet API.
+ * 
+ * IMPORTANT: After deploying your own API instance to Vercel,
+ * replace the URL below with your own Vercel deployment URL.
+ * See INSTRUCTIONS.md for a full guide.
+ * 
+ * Example: "https://my-consumet-api.vercel.app"
  */
-export const API_BASE_URL = "https://mangahook-api.vercel.app/api";
+export const API_BASE_URL = "https://manga-five-tan.vercel.app";

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState, useCallback } from 'react';
 import HomePage from './components/HomePage';
@@ -8,38 +7,43 @@ import type { View } from './types';
 
 interface AppState {
   view: View;
-  mangaEndpoint: string | null;
-  chapterEndpoint: string | null;
+  mangaId: string | null;
+  chapterId: string | null;
+  chapterTitle: string | null;
 }
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>({
     view: 'home',
-    mangaEndpoint: null,
-    chapterEndpoint: null,
+    mangaId: null,
+    chapterId: null,
+    chapterTitle: null,
   });
 
-  const handleSelectManga = useCallback((endpoint: string) => {
+  const handleSelectManga = useCallback((id: string) => {
     setState({
       view: 'detail',
-      mangaEndpoint: endpoint,
-      chapterEndpoint: null,
+      mangaId: id,
+      chapterId: null,
+      chapterTitle: null,
     });
   }, []);
 
-  const handleSelectChapter = useCallback((endpoint: string) => {
+  const handleSelectChapter = useCallback((id: string, title: string) => {
     setState(prevState => ({
       ...prevState,
       view: 'reader',
-      chapterEndpoint: endpoint,
+      chapterId: id,
+      chapterTitle: title,
     }));
   }, []);
 
   const handleBackToHome = useCallback(() => {
     setState({
       view: 'home',
-      mangaEndpoint: null,
-      chapterEndpoint: null,
+      mangaId: null,
+      chapterId: null,
+      chapterTitle: null,
     });
   }, []);
   
@@ -47,24 +51,26 @@ const App: React.FC = () => {
     setState(prevState => ({
       ...prevState,
       view: 'detail',
-      chapterEndpoint: null,
+      chapterId: null,
+      chapterTitle: null,
     }));
   }, []);
 
   const renderContent = () => {
     switch (state.view) {
       case 'detail':
-        return state.mangaEndpoint ? (
+        return state.mangaId ? (
           <MangaDetailPage
-            endpoint={state.mangaEndpoint}
+            mangaId={state.mangaId}
             onSelectChapter={handleSelectChapter}
             onBack={handleBackToHome}
           />
         ) : null;
       case 'reader':
-        return state.chapterEndpoint ? (
+        return state.chapterId && state.chapterTitle ? (
           <ChapterReaderPage
-            endpoint={state.chapterEndpoint}
+            chapterId={state.chapterId}
+            chapterTitle={state.chapterTitle}
             onBack={handleBackToDetail}
           />
         ) : null;

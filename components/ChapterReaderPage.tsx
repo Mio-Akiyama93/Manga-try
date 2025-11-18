@@ -1,18 +1,18 @@
-
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { getChapterDetail } from '../services/mangaApi';
-import type { ChapterPage } from '../types';
+import type { ChapterDetail } from '../types';
 import Spinner from './Spinner';
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
 
 interface ChapterReaderPageProps {
-  endpoint: string;
+  chapterId: string;
+  chapterTitle: string;
   onBack: () => void;
 }
 
-const ChapterReaderPage: React.FC<ChapterReaderPageProps> = ({ endpoint, onBack }) => {
-  const [pages, setPages] = useState<ChapterPage[]>([]);
+const ChapterReaderPage: React.FC<ChapterReaderPageProps> = ({ chapterId, chapterTitle, onBack }) => {
+  const [chapter, setChapter] = useState<ChapterDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,8 +22,8 @@ const ChapterReaderPage: React.FC<ChapterReaderPageProps> = ({ endpoint, onBack 
       setError(null);
       window.scrollTo(0, 0);
       try {
-        const detail = await getChapterDetail(endpoint);
-        setPages(detail.chapter_image);
+        const detail = await getChapterDetail(chapterId, chapterTitle);
+        setChapter(detail);
       } catch (err) {
         setError('Failed to load chapter pages.');
       } finally {
@@ -32,7 +32,7 @@ const ChapterReaderPage: React.FC<ChapterReaderPageProps> = ({ endpoint, onBack 
     };
 
     fetchChapter();
-  }, [endpoint]);
+  }, [chapterId, chapterTitle]);
 
   return (
     <div className="bg-black min-h-screen">
@@ -44,7 +44,7 @@ const ChapterReaderPage: React.FC<ChapterReaderPageProps> = ({ endpoint, onBack 
           <ArrowLeftIcon className="w-5 h-5" />
           <span>Back to Details</span>
         </button>
-        <span className="text-text-secondary text-sm pr-4">Reading Chapter</span>
+        <span className="text-text-secondary text-sm pr-4 truncate max-w-xs">{chapter?.title || 'Reading Chapter'}</span>
       </div>
 
       <div className="pt-20">
@@ -56,12 +56,11 @@ const ChapterReaderPage: React.FC<ChapterReaderPageProps> = ({ endpoint, onBack 
         {error && <div className="text-center text-red-400 p-8">{error}</div>}
         
         <div className="flex flex-col items-center">
-          {pages.map((page) => (
+          {chapter?.pageUrls.map((url, index) => (
              <img
-                key={page.image_number}
-                // Using an image proxy to avoid potential referrer issues
-                src={`https://images.weserv.nl/?url=${page.chapter_image_link.replace('http://', 'https://')}`}
-                alt={`Page ${page.image_number}`}
+                key={url}
+                src={url}
+                alt={`Page ${index + 1}`}
                 loading="lazy"
                 className="max-w-full md:max-w-4xl w-full h-auto block"
                 onError={(e) => { (e.target as HTMLImageElement).src = 'https://picsum.photos/800/1200?grayscale'; }}

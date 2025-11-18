@@ -1,34 +1,31 @@
-
 export interface Manga {
+  id: string;
   title: string;
-  thumb: string;
+  coverUrl: string;
   type: string;
-  updated_on: string;
-  endpoint: string;
 }
 
 export interface MangaDetail {
+  id: string;
   title: string;
-  thumb: string;
-  synopsis: string;
+  coverUrl: string;
+  description: string;
   status: string;
-  author: string;
-  genre_list: { genre_name: string }[];
-  chapter: MangaChapterSummary[];
+  genres: string[];
+  authors: string[];
+  chapters: MangaChapterSummary[];
 }
 
 export interface MangaChapterSummary {
-  chapter_title: string;
-  chapter_endpoint: string;
-}
-
-export interface ChapterPage {
-  chapter_image_link: string;
-  image_number: number;
+  id: string;
+  title: string;
+  chapterNumber: string | null;
 }
 
 export interface ChapterDetail {
-  chapter_image: ChapterPage[];
+  id: string;
+  title: string;
+  pageUrls: string[];
 }
 
 export type View = 'home' | 'detail' | 'reader';
